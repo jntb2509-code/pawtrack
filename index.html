@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WALKIES</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #edf1f8;
+      --card: #ffffff;
+      --accent: #5b8dd9;
+      --accent-dark: #4070bf;
+      --text: #1a2640;
+      --muted: #7a8fa8;
+      --tag-bg: #dce8f8;
+      --tag-text: #4070bf;
+      --shadow: 0 2px 12px rgba(26, 38, 64, 0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .screen.active { display: flex; }
+
+    /* ═══════════════════════════════
+       ONBOARDING — Welcome step
+    ═══════════════════════════════ */
+    #screen-welcome {
+      justify-content: center;
+      padding: 40px 32px;
+      text-align: center;
+      background: linear-gradient(160deg, #edf1f8 0%, #d6e4f7 100%);
+    }
+
+    .welcome-paw {
+      font-size: 72px;
+      margin-bottom: 24px;
+      animation: bounce 1.8s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    .welcome-title {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .welcome-title span { color: var(--accent); }
+
+    .welcome-sub {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto 40px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      max-width: 320px;
+      padding: 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(91, 141, 217, 0.4);
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-primary:active {
+      background: var(--accent-dark);
+      transform: scale(0.98);
+    }
+
+    /* ═══════════════════════════════
+       ONBOARDING — Form step
+    ═══════════════════════════════ */
+    #screen-form {
+      padding: 0 0 60px;
+    }
+
+    .form-header {
+      width: 100%;
+      background: linear-gradient(135deg, #5b8dd9 0%, #4070bf 100%);
+      padding: 48px 24px 32px;
+      text-align: center;
+    }
+
+    .form-header-icon { font-size: 48px; margin-bottom: 12px; }
+
+    .form-header h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .form-header p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .form-body {
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--card);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      font-size: 15px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .field-input:focus {
+      border-color: var(--accent);
+    }
+
+    .field-input::placeholder { color: #b0bfce; }
+
+    /* Gender pills */
+    .gender-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .gender-pill {
+      flex: 1;
+      padding: 13px;
+      background: var(--card);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .gender-pill.selected {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--tag-bg);
+    }
+
+    /* Number input row (age + weight) */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-submit-wrap {
+      width: 100%;
+      max-width: 420px;
+      padding: 0 20px 20px;
+    }
+
+    /* ═══════════════════════════════
+       HOME SCREEN
+    ═══════════════════════════════ */
+    #screen-home {
+      padding: 0 0 100px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 20px 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon { font-size: 26px; }
+
+    .logo-name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .hero {
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 20px 16px;
+    }
+
+    .hero-greeting {
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+
+    .hero-title {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .hero-title span { color: var(--accent); }
+
+    .stats-row {
+      width: 100%;
+      max-width: 420px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px 12px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cta-wrap {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px 20px 4px;
+    }
+
+    .btn-start {
+      width: 100%;
+      padding: 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(91, 141, 217, 0.4);
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-start:active {
+      background: var(--accent-dark);
+      transform: scale(0.98);
+    }
+
+    .section-header {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-title { font-size: 16px; font-weight: 700; }
+
+    .section-link {
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .walk-list {
+      width: 100%;
+      max-width: 420px;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .walk-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .walk-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--tag-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .walk-info { flex: 1; min-width: 0; }
+
+    .walk-date { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+
+    .walk-meta {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .walk-right { text-align: right; flex-shrink: 0; }
+
+    .walk-dist { font-size: 15px; font-weight: 700; color: var(--accent); }
+
+    .walk-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .tag {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .empty-walks {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px 20px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-top: 1px solid rgba(26, 38, 64, 0.07);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 20px;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      padding: 4px 16px;
+      border-radius: 10px;
+    }
+
+    .nav-item.active .nav-icon,
+    .nav-item.active .nav-label { color: var(--accent); }
+
+    .nav-icon { font-size: 22px; color: var(--muted); }
+    .nav-label { font-size: 10px; color: var(--muted); font-weight: 500; }
+
+    .dog-card {
+      background: linear-gradient(135deg, #5b8dd9 0%, #4070bf 100%);
+      border-radius: 20px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 4px 16px rgba(91, 141, 217, 0.3);
+      width: 100%;
+    }
+
+    .dog-emoji { font-size: 36px; }
+    .dog-info { flex: 1; }
+
+    .dog-name { font-size: 18px; font-weight: 700; color: #fff; }
+    .dog-breed { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 1px; }
+
+    .dog-streak {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+
+    .streak-num { font-size: 20px; font-weight: 800; color: #fff; }
+    .streak-label { font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Emoji picker */
+    .emoji-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .emoji-pill {
+      flex: 1;
+      padding: 10px 4px;
+      background: var(--card);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      font-size: 26px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    }
+
+    .emoji-pill:active { transform: scale(0.92); }
+
+    .emoji-pill.selected {
+      border-color: var(--accent);
+      background: var(--tag-bg);
+    }
+
+    /* Error state */
+    .field-input.error { border-color: #e05b5b; }
+    .error-msg { font-size: 12px; color: #e05b5b; margin-top: 4px; display: none; }
+    .error-msg.visible { display: block; }
+
+    /* ═══════════════════════════════
+       SETTINGS — slide-in panel
+    ═══════════════════════════════ */
+    #screen-settings {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 100;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 60px;
+    }
+
+    #screen-settings.open {
+      transform: translateX(0);
+    }
+
+    .settings-header {
+      width: 100%;
+      background: linear-gradient(135deg, #5b8dd9 0%, #4070bf 100%);
+      padding: 52px 20px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .settings-back {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .settings-back:active { background: rgba(255,255,255,0.35); }
+
+    .settings-title-wrap { flex: 1; }
+
+    .settings-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .settings-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      margin-top: 2px;
+    }
+
+    .settings-dog-emoji {
+      font-size: 42px;
+    }
+
+    /* ═══════════════════════════════
+       WALK TRACKING SCREEN
+    ═══════════════════════════════ */
+    #screen-walk {
+      position: relative;
+      height: 100vh;
+      min-height: unset;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    #walk-map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .walk-overlay-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: rgba(237, 241, 248, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .walk-live-bar {
+      position: absolute;
+      top: 66px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(26, 38, 64, 0.15);
+      overflow: hidden;
+      min-width: 220px;
+    }
+
+    .walk-live-stat {
+      flex: 1;
+      text-align: center;
+      padding: 12px 20px;
+    }
+
+    .walk-live-stat-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .walk-live-stat-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-top: 1px;
+    }
+
+    .walk-stat-divider {
+      width: 1px;
+      height: 40px;
+      background: rgba(26, 38, 64, 0.1);
+      flex-shrink: 0;
+    }
+
+    .walk-gps-badge {
+      position: absolute;
+      top: 142px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(91, 141, 217, 0.92);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .gps-dot {
+      width: 7px;
+      height: 7px;
+      background: #7fff7f;
+      border-radius: 50%;
+      animation: gpsPulse 1.2s infinite;
+    }
+
+    @keyframes gpsPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .gps-dot.searching {
+      background: #ffd27f;
+    }
+
+    .gps-dot.off {
+      background: #ff8080;
+      animation: none;
+    }
+
+    .walk-end-wrap {
+      position: absolute;
+      bottom: 40px;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      padding: 0 40px;
+    }
+
+    .btn-end-walk {
+      width: 100%;
+      max-width: 320px;
+      padding: 18px;
+      background: #e05b5b;
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(224, 91, 91, 0.45);
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-end-walk:active {
+      background: #c04444;
+      transform: scale(0.98);
+    }
+
+    /* End walk summary modal */
+    .walk-summary-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 38, 64, 0.5);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .walk-summary-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .walk-summary-sheet {
+      background: var(--card);
+      border-radius: 28px 28px 0 0;
+      padding: 28px 24px 48px;
+      width: 100%;
+      max-width: 420px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .walk-summary-overlay.visible .walk-summary-sheet {
+      transform: translateY(0);
+    }
+
+    .summary-handle {
+      width: 36px;
+      height: 4px;
+      background: #dce8f8;
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+
+    .summary-title {
+      font-size: 22px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .summary-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .summary-stat {
+      background: var(--bg);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .summary-stat-val {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .summary-stat-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════
+       SCREEN 1 — Welcome
+  ══════════════════════════════ -->
+  <div id="screen-welcome" class="screen active">
+    <div class="welcome-paw">🐾</div>
+    <h1 class="welcome-title">Welcome to<br><span>WALKIES</span></h1>
+    <p class="welcome-sub">Track every walk, keep your dog happy and healthy.</p>
+    <button class="btn-primary" onclick="showScreen('screen-form')">Get Started</button>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 2 — Dog setup form
+  ══════════════════════════════ -->
+  <div id="screen-form" class="screen">
+    <div class="form-header">
+      <div class="form-header-icon">🐕</div>
+      <h2>Tell us about your dog</h2>
+      <p>You can always edit these later in Settings</p>
+    </div>
+
+    <div class="form-body">
+
+      <div>
+        <div class="field-label">Dog's Name *</div>
+        <input id="f-name" class="field-input" type="text" placeholder="e.g. Buddy" autocomplete="off" />
+        <div id="err-name" class="error-msg">Please enter your dog's name</div>
+      </div>
+
+      <div>
+        <div class="field-label">Breed</div>
+        <input id="f-breed" class="field-input" type="text" placeholder="e.g. Golden Retriever" autocomplete="off" />
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="field-label">Age (years) *</div>
+          <input id="f-age" class="field-input" type="number" placeholder="e.g. 3" min="0" max="30" />
+          <div id="err-age" class="error-msg">Enter a valid age</div>
+        </div>
+        <div>
+          <div class="field-label">Weight (kg)</div>
+          <input id="f-weight" class="field-input" type="number" placeholder="e.g. 28" min="0" max="120" step="0.1" />
+        </div>
+      </div>
+
+      <div>
+        <div class="field-label">Gender</div>
+        <div class="gender-row">
+          <div class="gender-pill" id="pill-male"   onclick="selectGender('male')">♂ Male</div>
+          <div class="gender-pill" id="pill-female" onclick="selectGender('female')">♀ Female</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="field-label">Pick your dog's emoji</div>
+        <div class="emoji-row">
+          <div class="emoji-pill selected" id="ep-0" onclick="selectEmoji(0)">🐕</div>
+          <div class="emoji-pill" id="ep-1" onclick="selectEmoji(1)">🐶</div>
+          <div class="emoji-pill" id="ep-2" onclick="selectEmoji(2)">🐩</div>
+          <div class="emoji-pill" id="ep-3" onclick="selectEmoji(3)">🦮</div>
+          <div class="emoji-pill" id="ep-4" onclick="selectEmoji(4)">🐕‍🦺</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="form-submit-wrap">
+      <button class="btn-primary" style="max-width:100%" onclick="submitForm()">Let's go! 🐾</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 3 — Home
+  ══════════════════════════════ -->
+  <div id="screen-home" class="screen">
+
+    <header>
+      <div class="logo">
+        <span class="logo-icon">🐾</span>
+        <span class="logo-name">WALKIES</span>
+      </div>
+      <div class="avatar" onclick="openSettings()" title="Settings">⚙️</div>
+    </header>
+
+    <div class="hero">
+      <p class="hero-greeting" id="home-date"></p>
+      <h1 class="hero-title">Ready for today's<br><span>walk?</span></h1>
+    </div>
+
+    <div style="width:100%;max-width:420px;padding:0 20px;">
+      <div class="dog-card">
+        <span class="dog-emoji" id="home-dog-emoji">🐕</span>
+        <div class="dog-info">
+          <div class="dog-name" id="home-dog-name"></div>
+          <div class="dog-breed" id="home-dog-details"></div>
+        </div>
+        <div class="dog-streak">
+          <span class="streak-num" id="home-streak">🔥 0</span>
+          <span class="streak-label">day streak</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-walks">0</div>
+        <div class="stat-label">Total walks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-dist">0 km</div>
+        <div class="stat-label">Distance</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-time">0 m</div>
+        <div class="stat-label">Time out</div>
+      </div>
+    </div>
+
+    <div class="cta-wrap">
+      <button class="btn-start" onclick="startWalk()">
+        <span>🐾</span> Start a Walk
+      </button>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">Recent Walks</span>
+    </div>
+
+    <div class="walk-list" id="recent-walks-list">
+      <!-- Populated dynamically -->
+    </div>
+
+    <nav>
+      <div class="nav-item active">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">📍</span>
+        <span class="nav-label">Map</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Stats</span>
+      </div>
+      <div class="nav-item" onclick="openSettings()">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ══════════════════════════════
+       SCREEN 4 — Walk Tracking
+  ══════════════════════════════ -->
+  <div id="screen-walk" class="screen">
+
+    <!-- Full-screen map -->
+    <div id="walk-map"></div>
+
+    <!-- Header overlay -->
+    <div class="walk-overlay-header">
+      <div class="logo">
+        <span class="logo-icon">🐾</span>
+        <span class="logo-name">WALKIES</span>
+      </div>
+    </div>
+
+    <!-- Live stats pill -->
+    <div class="walk-live-bar">
+      <div class="walk-live-stat">
+        <div class="walk-live-stat-val" id="walk-timer">00:00</div>
+        <div class="walk-live-stat-lbl">Time</div>
+      </div>
+      <div class="walk-stat-divider"></div>
+      <div class="walk-live-stat">
+        <div class="walk-live-stat-val" id="walk-dist-live">0.00</div>
+        <div class="walk-live-stat-lbl">km</div>
+      </div>
+    </div>
+
+    <!-- GPS status badge -->
+    <div class="walk-gps-badge" id="gps-badge">
+      <div class="gps-dot searching" id="gps-dot"></div>
+      <span id="gps-label">Finding GPS…</span>
+    </div>
+
+    <!-- End walk button -->
+    <div class="walk-end-wrap">
+      <button class="btn-end-walk" onclick="showSummary()">🏁 End Walk</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       WALK SUMMARY SHEET
+  ══════════════════════════════ -->
+  <div class="walk-summary-overlay" id="summary-overlay">
+    <div class="walk-summary-sheet">
+      <div class="summary-handle"></div>
+      <div class="summary-title">Walk Complete! 🎉</div>
+      <div class="summary-subtitle" id="summary-dog-name">Great job, Buddy!</div>
+      <div class="summary-stats">
+        <div class="summary-stat">
+          <div class="summary-stat-val" id="sum-time">0:00</div>
+          <div class="summary-stat-lbl">Duration</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-stat-val" id="sum-dist">0.00 km</div>
+          <div class="summary-stat-lbl">Distance</div>
+        </div>
+      </div>
+      <button class="btn-primary" style="max-width:100%" onclick="saveWalk()">Save Walk</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SETTINGS PANEL
+  ══════════════════════════════ -->
+  <div id="screen-settings">
+
+    <div class="settings-header">
+      <button class="settings-back" onclick="closeSettings()">←</button>
+      <div class="settings-title-wrap">
+        <div class="settings-title">My Dog</div>
+        <div class="settings-subtitle">Edit your dog's profile</div>
+      </div>
+      <span class="settings-dog-emoji" id="s-header-emoji">🐕</span>
+    </div>
+
+    <div class="form-body">
+
+      <div>
+        <div class="field-label">Dog's Name *</div>
+        <input id="s-name" class="field-input" type="text" placeholder="e.g. Buddy" autocomplete="off" />
+        <div id="s-err-name" class="error-msg">Please enter your dog's name</div>
+      </div>
+
+      <div>
+        <div class="field-label">Breed</div>
+        <input id="s-breed" class="field-input" type="text" placeholder="e.g. Golden Retriever" autocomplete="off" />
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="field-label">Age (years) *</div>
+          <input id="s-age" class="field-input" type="number" placeholder="e.g. 3" min="0" max="30" />
+          <div id="s-err-age" class="error-msg">Enter a valid age</div>
+        </div>
+        <div>
+          <div class="field-label">Weight (kg)</div>
+          <input id="s-weight" class="field-input" type="number" placeholder="e.g. 28" min="0" max="120" step="0.1" />
+        </div>
+      </div>
+
+      <div>
+        <div class="field-label">Gender</div>
+        <div class="gender-row">
+          <div class="gender-pill" id="s-pill-male"   onclick="selectSettingsGender('male')">♂ Male</div>
+          <div class="gender-pill" id="s-pill-female" onclick="selectSettingsGender('female')">♀ Female</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="field-label">Dog's emoji</div>
+        <div class="emoji-row">
+          <div class="emoji-pill selected" id="s-ep-0" onclick="selectSettingsEmoji(0)">🐕</div>
+          <div class="emoji-pill" id="s-ep-1" onclick="selectSettingsEmoji(1)">🐶</div>
+          <div class="emoji-pill" id="s-ep-2" onclick="selectSettingsEmoji(2)">🐩</div>
+          <div class="emoji-pill" id="s-ep-3" onclick="selectSettingsEmoji(3)">🦮</div>
+          <div class="emoji-pill" id="s-ep-4" onclick="selectSettingsEmoji(4)">🐕‍🦺</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="form-submit-wrap">
+      <button class="btn-primary" style="max-width:100%" onclick="saveSettings()">Save Changes</button>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Helpers ──────────────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    // ── Gender selection ─────────────────────────────
+    let selectedGender = '';
+
+    function selectGender(g) {
+      selectedGender = g;
+      document.getElementById('pill-male').classList.toggle('selected', g === 'male');
+      document.getElementById('pill-female').classList.toggle('selected', g === 'female');
+    }
+
+    // ── Emoji selection ──────────────────────────────
+    const DOG_EMOJIS = ['🐕', '🐶', '🐩', '🦮', '🐕‍🦺'];
+    let selectedEmojiIdx = 0;
+
+    function selectEmoji(idx) {
+      selectedEmojiIdx = idx;
+      DOG_EMOJIS.forEach((_, i) => {
+        document.getElementById('ep-' + i).classList.toggle('selected', i === idx);
+      });
+    }
+
+    // ── Form submit ──────────────────────────────────
+    function submitForm() {
+      const name   = document.getElementById('f-name').value.trim();
+      const breed  = document.getElementById('f-breed').value.trim();
+      const age    = document.getElementById('f-age').value.trim();
+      const weight = document.getElementById('f-weight').value.trim();
+
+      let valid = true;
+
+      const errName = document.getElementById('err-name');
+      if (!name) {
+        document.getElementById('f-name').classList.add('error');
+        errName.classList.add('visible');
+        valid = false;
+      } else {
+        document.getElementById('f-name').classList.remove('error');
+        errName.classList.remove('visible');
+      }
+
+      const errAge = document.getElementById('err-age');
+      if (!age || isNaN(age) || age < 0 || age > 30) {
+        document.getElementById('f-age').classList.add('error');
+        errAge.classList.add('visible');
+        valid = false;
+      } else {
+        document.getElementById('f-age').classList.remove('error');
+        errAge.classList.remove('visible');
+      }
+
+      if (!valid) return;
+
+      const dog = { name, breed, age, weight, gender: selectedGender, emoji: DOG_EMOJIS[selectedEmojiIdx] };
+      localStorage.setItem('walkies_dog', JSON.stringify(dog));
+
+      loadHome(dog);
+      showScreen('screen-home');
+    }
+
+    // ── Load home with dog data ───────────────────────
+    function loadHome(dog) {
+      const now = new Date();
+      document.getElementById('home-date').textContent =
+        now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase();
+
+      document.getElementById('home-dog-name').textContent = dog.name || '';
+      document.getElementById('home-dog-emoji').textContent = dog.emoji || '🐕';
+
+      const parts = [];
+      if (dog.breed)  parts.push(dog.breed);
+      if (dog.age)    parts.push(dog.age + ' yrs');
+      if (dog.weight) parts.push(dog.weight + ' kg');
+      if (dog.gender) parts.push(dog.gender === 'male' ? '♂' : '♀');
+      document.getElementById('home-dog-details').textContent = parts.join(' · ');
+
+      // Stats from saved walks
+      const walks = getSavedWalks();
+      const totalDist = walks.reduce((s, w) => s + (w.distance || 0), 0);
+      const totalSecs = walks.reduce((s, w) => s + (w.duration || 0), 0);
+      const totalHrs  = totalSecs / 3600;
+
+      document.getElementById('stat-walks').textContent = walks.length;
+      document.getElementById('stat-dist').textContent =
+        totalDist < 1 ? totalDist.toFixed(2) + ' km' : totalDist.toFixed(1) + ' km';
+      document.getElementById('stat-time').textContent =
+        totalHrs < 1 ? Math.round(totalSecs / 60) + ' m' : totalHrs.toFixed(1) + ' h';
+
+      // Streak
+      document.getElementById('home-streak').textContent = '🔥 ' + calcStreak(walks);
+
+      // Recent walks
+      renderRecentWalks(walks.slice(0, 3));
+    }
+
+    function getSavedWalks() {
+      return JSON.parse(localStorage.getItem('walkies_walks') || '[]');
+    }
+
+    function calcStreak(walks) {
+      if (!walks.length) return 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const walkDays = new Set(walks.map(w => {
+        const d = new Date(w.date);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+      }));
+
+      let streak = 0;
+      let day = today.getTime();
+      while (walkDays.has(day)) {
+        streak++;
+        day -= 86400000;
+      }
+      return streak;
+    }
+
+    function renderRecentWalks(walks) {
+      const list = document.getElementById('recent-walks-list');
+      if (!walks.length) {
+        list.innerHTML = '<div class="empty-walks">No walks yet!<br>Tap <b>Start a Walk</b> to begin your first adventure 🐾</div>';
+        return;
+      }
+
+      list.innerHTML = walks.map(w => {
+        const date = new Date(w.date);
+        return `
+          <div class="walk-card">
+            <div class="walk-icon">${getTimeIcon(date)}</div>
+            <div class="walk-info">
+              <div class="walk-date">${formatWalkDate(date)}</div>
+              <div class="walk-meta">${w.distance.toFixed(2)} km walk</div>
+              <span class="tag">${getTimeTag(date)}</span>
+            </div>
+            <div class="walk-right">
+              <div class="walk-dist">${w.distance.toFixed(2)} km</div>
+              <div class="walk-time">${formatDuration(w.duration)}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function formatWalkDate(date) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+      const walkDay = new Date(date); walkDay.setHours(0, 0, 0, 0);
+      const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      if (walkDay.getTime() === today.getTime()) return 'Today, ' + timeStr;
+      if (walkDay.getTime() === yesterday.getTime()) return 'Yesterday, ' + timeStr;
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + timeStr;
+    }
+
+    function formatDuration(secs) {
+      const m = Math.floor(secs / 60);
+      const h = Math.floor(m / 60);
+      if (h > 0) return h + 'h ' + (m % 60) + 'min';
+      return m + ' min';
+    }
+
+    function getTimeTag(date) {
+      const h = date.getHours();
+      if (h < 12) return 'Morning';
+      if (h < 17) return 'Afternoon';
+      if (h < 21) return 'Evening';
+      return 'Night';
+    }
+
+    function getTimeIcon(date) {
+      const h = date.getHours();
+      if (h < 12) return '🌅';
+      if (h < 17) return '☀️';
+      if (h < 21) return '🌆';
+      return '🌙';
+    }
+
+    // ── Settings panel ───────────────────────────────
+    let settingsGender = '';
+    let settingsEmojiIdx = 0;
+
+    function openSettings() {
+      const saved = JSON.parse(localStorage.getItem('walkies_dog') || '{}');
+
+      document.getElementById('s-name').value   = saved.name   || '';
+      document.getElementById('s-breed').value  = saved.breed  || '';
+      document.getElementById('s-age').value    = saved.age    || '';
+      document.getElementById('s-weight').value = saved.weight || '';
+
+      settingsGender = saved.gender || '';
+      document.getElementById('s-pill-male').classList.toggle('selected', settingsGender === 'male');
+      document.getElementById('s-pill-female').classList.toggle('selected', settingsGender === 'female');
+
+      settingsEmojiIdx = DOG_EMOJIS.indexOf(saved.emoji);
+      if (settingsEmojiIdx === -1) settingsEmojiIdx = 0;
+      DOG_EMOJIS.forEach((_, i) => {
+        document.getElementById('s-ep-' + i).classList.toggle('selected', i === settingsEmojiIdx);
+      });
+      document.getElementById('s-header-emoji').textContent = DOG_EMOJIS[settingsEmojiIdx];
+
+      document.getElementById('screen-settings').classList.add('open');
+    }
+
+    function closeSettings() {
+      document.getElementById('screen-settings').classList.remove('open');
+    }
+
+    function selectSettingsGender(g) {
+      settingsGender = g;
+      document.getElementById('s-pill-male').classList.toggle('selected', g === 'male');
+      document.getElementById('s-pill-female').classList.toggle('selected', g === 'female');
+    }
+
+    function selectSettingsEmoji(idx) {
+      settingsEmojiIdx = idx;
+      DOG_EMOJIS.forEach((_, i) => {
+        document.getElementById('s-ep-' + i).classList.toggle('selected', i === idx);
+      });
+      document.getElementById('s-header-emoji').textContent = DOG_EMOJIS[idx];
+    }
+
+    function saveSettings() {
+      const name   = document.getElementById('s-name').value.trim();
+      const breed  = document.getElementById('s-breed').value.trim();
+      const age    = document.getElementById('s-age').value.trim();
+      const weight = document.getElementById('s-weight').value.trim();
+
+      let valid = true;
+
+      const errName = document.getElementById('s-err-name');
+      if (!name) {
+        document.getElementById('s-name').classList.add('error');
+        errName.classList.add('visible');
+        valid = false;
+      } else {
+        document.getElementById('s-name').classList.remove('error');
+        errName.classList.remove('visible');
+      }
+
+      const errAge = document.getElementById('s-err-age');
+      if (!age || isNaN(age) || age < 0 || age > 30) {
+        document.getElementById('s-age').classList.add('error');
+        errAge.classList.add('visible');
+        valid = false;
+      } else {
+        document.getElementById('s-age').classList.remove('error');
+        errAge.classList.remove('visible');
+      }
+
+      if (!valid) return;
+
+      const dog = { name, breed, age, weight, gender: settingsGender, emoji: DOG_EMOJIS[settingsEmojiIdx] };
+      localStorage.setItem('walkies_dog', JSON.stringify(dog));
+      loadHome(dog);
+      closeSettings();
+    }
+
+    // ── WALK TRACKING ────────────────────────────────
+    let walkInterval  = null;
+    let walkSeconds   = 0;
+    let watchId       = null;
+    let walkRoute     = [];
+    let walkMap       = null;
+    let walkPolyline  = null;
+    let walkDotMarker = null;
+    let walkStartTime = null;
+    let mapReady      = false;
+
+    function startWalk() {
+      showScreen('screen-walk');
+      walkSeconds   = 0;
+      walkRoute     = [];
+      walkStartTime = new Date();
+
+      document.getElementById('walk-timer').textContent    = '00:00';
+      document.getElementById('walk-dist-live').textContent = '0.00';
+      setGpsStatus('searching');
+
+      // Start timer
+      walkInterval = setInterval(() => {
+        walkSeconds++;
+        const m = Math.floor(walkSeconds / 60).toString().padStart(2, '0');
+        const s = (walkSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('walk-timer').textContent = m + ':' + s;
+      }, 1000);
+
+      // Init or re-use map
+      setTimeout(() => {
+        if (!walkMap) {
+          walkMap = L.map('walk-map', { zoomControl: false }).setView([51.505, -0.09], 17);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+          }).addTo(walkMap);
+          L.control.zoom({ position: 'bottomright' }).addTo(walkMap);
+          walkPolyline = L.polyline([], {
+            color: '#5b8dd9',
+            weight: 5,
+            opacity: 0.9,
+            lineJoin: 'round'
+          }).addTo(walkMap);
+        } else {
+          walkPolyline.setLatLngs([]);
+          if (walkDotMarker) { walkMap.removeLayer(walkDotMarker); walkDotMarker = null; }
+          walkMap.invalidateSize();
+        }
+        mapReady = true;
+        startGPS();
+      }, 150);
+    }
+
+    function startGPS() {
+      if (!navigator.geolocation) {
+        setGpsStatus('off');
+        return;
+      }
+
+      watchId = navigator.geolocation.watchPosition(
+        pos => {
+          const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+
+          setGpsStatus('on');
+
+          walkRoute.push([lat, lng]);
+          walkPolyline.setLatLngs(walkRoute);
+          walkMap.setView([lat, lng]);
+
+          // Animated dot marker
+          if (!walkDotMarker) {
+            walkDotMarker = L.circleMarker([lat, lng], {
+              radius: 9,
+              fillColor: '#5b8dd9',
+              color: '#fff',
+              weight: 3,
+              fillOpacity: 1,
+              zIndexOffset: 1000
+            }).addTo(walkMap);
+          } else {
+            walkDotMarker.setLatLng([lat, lng]);
+          }
+
+          // Update distance
+          const dist = calcDistance(walkRoute);
+          document.getElementById('walk-dist-live').textContent = dist.toFixed(2);
+        },
+        err => {
+          setGpsStatus('off');
+        },
+        { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
+      );
+    }
+
+    function setGpsStatus(state) {
+      const dot   = document.getElementById('gps-dot');
+      const label = document.getElementById('gps-label');
+      dot.className = 'gps-dot ' + state;
+      if (state === 'on')        label.textContent = 'GPS active';
+      else if (state === 'off')  label.textContent = 'GPS unavailable';
+      else                       label.textContent = 'Finding GPS…';
+    }
+
+    function calcDistance(route) {
+      let total = 0;
+      for (let i = 1; i < route.length; i++) {
+        total += haversine(route[i - 1], route[i]);
+      }
+      return total;
+    }
+
+    function haversine([lat1, lng1], [lat2, lng2]) {
+      const R    = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a    = Math.sin(dLat / 2) ** 2 +
+                   Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                   Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function showSummary() {
+      // Pause timer but keep seconds
+      clearInterval(walkInterval);
+      walkInterval = null;
+
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+
+      const distance = calcDistance(walkRoute);
+      const dog = JSON.parse(localStorage.getItem('walkies_dog') || '{}');
+
+      document.getElementById('summary-dog-name').textContent = 'Great job, ' + (dog.name || 'pup') + '!';
+      document.getElementById('sum-time').textContent = formatDuration(walkSeconds) || '< 1 min';
+      document.getElementById('sum-dist').textContent = distance.toFixed(2) + ' km';
+
+      document.getElementById('summary-overlay').classList.add('visible');
+    }
+
+    function saveWalk() {
+      const distance = calcDistance(walkRoute);
+      const walks = getSavedWalks();
+      walks.unshift({
+        id:       Date.now(),
+        date:     walkStartTime.toISOString(),
+        duration: walkSeconds,
+        distance: parseFloat(distance.toFixed(3)),
+        route:    walkRoute
+      });
+      localStorage.setItem('walkies_walks', JSON.stringify(walks));
+
+      // Close summary
+      document.getElementById('summary-overlay').classList.remove('visible');
+
+      // Go home and refresh
+      const dog = JSON.parse(localStorage.getItem('walkies_dog') || '{}');
+      loadHome(dog);
+      showScreen('screen-home');
+    }
+
+    // ── On page load: check if dog already set up ────
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('walkies_dog');
+      if (saved) {
+        loadHome(JSON.parse(saved));
+        showScreen('screen-home');
+      } else {
+        showScreen('screen-welcome');
+      }
+    });
+  </script>
+
+</body>
+</html>
