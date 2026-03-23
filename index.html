@@ -397,13 +397,13 @@
     .walk-delete {
       background: none;
       border: none;
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
-      color: var(--muted);
-      padding: 4px 0 4px 10px;
-      flex-shrink: 0;
-      opacity: 0.5;
+      display: block;
+      margin-top: 6px;
+      opacity: 0.4;
       transition: opacity 0.15s;
+      padding: 0;
     }
     .walk-delete:active { opacity: 1; }
 
@@ -1247,8 +1247,8 @@
             <div class="walk-right">
               <div class="walk-dist">${w.distance.toFixed(2)} km</div>
               <div class="walk-time">${formatDuration(w.duration)}</div>
+              <button class="walk-delete" onclick="deleteWalk(${w.id})" title="Delete walk">🗑️</button>
             </div>
-            <button class="walk-delete" onclick="deleteWalk(${w.id})" title="Delete walk">🗑️</button>
           </div>`;
       }).join('');
     }
