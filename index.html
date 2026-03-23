@@ -987,6 +987,7 @@
         <span class="logo-icon">🐾</span>
         <span class="logo-name">WALKIES</span>
       </div>
+      <button onclick="cancelWalk()" style="background:rgba(26,38,64,0.08);border:none;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;">✕ Cancel</button>
     </div>
 
     <!-- Live stats pill -->
@@ -1150,7 +1151,7 @@
       }
 
       const errAge = document.getElementById('err-age');
-      if (!age || isNaN(age) || age < 0 || age > 30) {
+      if (age === '' || isNaN(age) || age < 0 || age > 30) {
         document.getElementById('f-age').classList.add('error');
         errAge.classList.add('visible');
         valid = false;
@@ -1357,7 +1358,7 @@
       }
 
       const errAge = document.getElementById('s-err-age');
-      if (!age || isNaN(age) || age < 0 || age > 30) {
+      if (age === '' || isNaN(age) || age < 0 || age > 30) {
         document.getElementById('s-age').classList.add('error');
         errAge.classList.add('visible');
         valid = false;
@@ -1385,7 +1386,23 @@
     let walkStartTime = null;
     let mapReady      = false;
 
+    function cancelWalk() {
+      clearInterval(walkInterval);
+      walkInterval = null;
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      const dog = JSON.parse(localStorage.getItem('walkies_dog') || '{}');
+      loadHome(dog);
+      showScreen('screen-home');
+    }
+
     function startWalk() {
+      // Clear any existing walk that might still be running
+      if (walkInterval) { clearInterval(walkInterval); walkInterval = null; }
+      if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+
       showScreen('screen-walk');
       walkSeconds   = 0;
       walkRoute     = [];
