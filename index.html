@@ -592,6 +592,7 @@
     #screen-walk {
       position: relative;
       height: 100vh;
+      height: 100dvh;
       min-height: unset;
       overflow: hidden;
       padding: 0;
@@ -706,13 +707,14 @@
 
     .walk-end-wrap {
       position: absolute;
-      bottom: 40px;
+      bottom: 0;
       left: 0;
       right: 0;
       z-index: 10;
       display: flex;
       justify-content: center;
       padding: 0 40px;
+      padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 20px));
     }
 
     .btn-end-walk {
@@ -987,7 +989,7 @@
         <span class="logo-icon">🐾</span>
         <span class="logo-name">WALKIES</span>
       </div>
-      <button onclick="cancelWalk()" style="background:rgba(26,38,64,0.08);border:none;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;">✕ Cancel</button>
+      <button onclick="cancelWalk()" style="background:rgba(255,255,255,0.75);border:1.5px solid rgba(100,130,180,0.25);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;color:#4a6fa5;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.08);">✕ Cancel</button>
     </div>
 
     <!-- Live stats pill -->
