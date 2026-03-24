@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get WALKIES</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #edf1f8;
+      --card: #ffffff;
+      --accent: #5b8dd9;
+      --accent-dark: #4070bf;
+      --text: #1a2640;
+      --muted: #7a8fa8;
+      --tag-bg: #dce8f8;
+      --shadow: 0 2px 16px rgba(26,38,64,0.10);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── HEADER ── */
+    .app-icon {
+      width: 96px;
+      height: 96px;
+      background: linear-gradient(135deg, #5b8dd9, #4070bf);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 24px rgba(91,141,217,0.35);
+    }
+
+    .app-name {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .app-tagline {
+      font-size: 15px;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .feature-pill {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-dark);
+      box-shadow: var(--shadow);
+    }
+
+    /* ── INSTALL CARD ── */
+    .install-card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .install-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    /* Android */
+    #android-section .install-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #5b8dd9, #4070bf);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(91,141,217,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #android-section .install-note {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    #android-installed {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: #4caf82;
+    }
+
+    /* iOS steps */
+    .ios-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .ios-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+      padding-top: 4px;
+    }
+
+    .step-text strong { color: var(--accent-dark); }
+
+    .step-icon {
+      font-size: 18px;
+      margin-left: 4px;
+    }
+
+    /* Desktop QR */
+    #desktop-section .qr-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 16px 0 12px;
+    }
+
+    #desktop-section .qr-wrap canvas,
+    #desktop-section .qr-wrap img {
+      border-radius: 12px;
+    }
+
+    #desktop-section .qr-note {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Open app link */
+    .open-link {
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .open-link a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 32px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-icon">🐾</div>
+  <div class="app-name">WALKIES</div>
+  <div class="app-tagline">Track every walk. Keep your dog happy and healthy.</div>
+
+  <div class="features">
+    <div class="feature-pill">📍 GPS Tracking</div>
+    <div class="feature-pill">🗺️ Live Map</div>
+    <div class="feature-pill">📊 Walk Stats</div>
+    <div class="feature-pill">🔥 Streaks</div>
+    <div class="feature-pill">🆓 Free</div>
+  </div>
+
+  <!-- Android install -->
+  <div class="install-card" id="android-section" style="display:none">
+    <div class="install-card-title">📱 Android</div>
+    <button class="install-btn" id="android-install-btn" onclick="triggerInstall()">
+      <span>⬇️</span> Install WALKIES
+    </button>
+    <div class="install-note">Adds to your home screen — no app store needed</div>
+  </div>
+
+  <!-- iOS instructions -->
+  <div class="install-card" id="ios-section" style="display:none">
+    <div class="install-card-title">📱 iPhone / iPad</div>
+    <div class="ios-steps">
+      <div class="ios-step">
+        <div class="step-num">1</div>
+        <div class="step-text">Tap the <strong>Share</strong> button at the bottom of Safari <span class="step-icon">⬆️</span></div>
+      </div>
+      <div class="ios-step">
+        <div class="step-num">2</div>
+        <div class="step-text">Scroll down and tap <strong>"Add to Home Screen"</strong> <span class="step-icon">➕</span></div>
+      </div>
+      <div class="ios-step">
+        <div class="step-num">3</div>
+        <div class="step-text">Tap <strong>"Add"</strong> in the top right — done! <span class="step-icon">✅</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop QR -->
+  <div class="install-card" id="desktop-section" style="display:none">
+    <div class="install-card-title">💻 On a computer? Scan with your phone</div>
+    <div class="qr-wrap" id="qr-box"></div>
+    <div class="qr-note">Point your phone camera at the QR code</div>
+  </div>
+
+  <div class="open-link">
+    Already installed? <a id="app-link" href="#">Open WALKIES</a>
+  </div>
+
+  <div class="footer">Free forever · No account needed · Works offline</div>
+
+  <script>
+    const APP_URL = window.location.href.replace('install.html', '').replace(/\/$/, '') + '/';
+    document.getElementById('app-link').href = APP_URL;
+
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('android-section').style.display = 'block';
+    });
+
+    function triggerInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choice => {
+        deferredPrompt = null;
+        if (choice.outcome === 'accepted') {
+          document.getElementById('android-section').innerHTML =
+            '<div id="android-installed">✅ WALKIES installed! Check your home screen.</div>';
+        }
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('android-section').innerHTML =
+        '<div id="android-installed">✅ WALKIES installed! Check your home screen.</div>';
+    });
+
+    function detectPlatform() {
+      const ua = navigator.userAgent;
+      const isIOS = /iphone|ipad|ipod/i.test(ua);
+      const isAndroid = /android/i.test(ua);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+      if (isStandalone) {
+        document.getElementById('app-link').parentElement.innerHTML =
+          '✅ Already installed! <a href="' + APP_URL + '">Open WALKIES</a>';
+        return;
+      }
+
+      if (isIOS) {
+        document.getElementById('ios-section').style.display = 'block';
+      } else if (!isAndroid) {
+        // Desktop — show QR
+        document.getElementById('desktop-section').style.display = 'block';
+        new QRCode(document.getElementById('qr-box'), {
+          text: APP_URL,
+          width: 180,
+          height: 180,
+          colorDark: '#1a2640',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+      // Android: beforeinstallprompt handles it above
+      // Fallback if beforeinstallprompt never fires on Android (e.g. already installed)
+      setTimeout(() => {
+        if (isAndroid && document.getElementById('android-section').style.display === 'none') {
+          document.getElementById('android-section').style.display = 'block';
+          document.getElementById('android-section').innerHTML =
+            '<div class="install-card-title">📱 Android</div>' +
+            '<div id="android-installed">Tap the browser menu → <strong>Add to Home Screen</strong></div>';
+        }
+      }, 1500);
+    }
+
+    detectPlatform();
+  </script>
+
+</body>
+</html>
