@@ -1,4 +1,4 @@
-const CACHE_NAME = 'walkies-v1';
+const CACHE_NAME = 'walkies-v2';
 const ASSETS = [
   './',
   './index.html',
